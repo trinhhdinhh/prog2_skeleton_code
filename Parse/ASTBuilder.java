@@ -46,6 +46,88 @@ public class ASTBuilder extends gParserBaseVisitor<Absyn> {
             new EmptyStmt(0)
       );
    }
+   @Override
+   public Absyn visitParenExp(g.Parser.ParenExpContext ctx){
+      // Just visit the inner expression and return it
+      return visit(ctx.expr());
+   }
+   @Override
+   public Absyn visitBinOp(gParser.BinOpContext ctx){
+      // Get left expression and visit it
+      Exp left = (Exp)visit(ctx.expr(0));
+      // Get right expression and visit it
+      Exp right = (Exp)visit(ctx.expr(1));
+      // Get operator as a string
+      String operator = ctx.op.getText();
+      // Create and return a BinOp node
+      return new BinOp(0, left, operator, right);
+   }
+   @Override
+   public Absyn visitUnaryExp(gParser.UnaryExpContext ctx){
+      // Get the operator from the unary_operator rule
+      String prefix = ctx.unary_operator().getText();
+      // Get and visit the expression being operated on
+      Exp exp = (Exp)visit(ctx.expr());
+      // Create and return UnaryExp node
+      return new UnaryEXp(0, prefix, exp);
+   }
+   @Override
+   public Absyn visitFunExp(gParser.FunExpContext ctx){
+      // Get the function name
+      Exp name = (Exp)visit(ctx.expr(0);
+      // Create list to hold parameters
+      ExpList params = new ExpList(0);
+      // Loop through all parameter expressions
+      for (int = 1; i < ctx.exp().size(); i++){
+         params.list.add((Exp)visit(ctx.expr(i)));
+      }
+      // Create and return FunExp node
+      return new FunExp(0, name, params);
+   }
+   @Override
+   public Absyn visitArrayExp(g.Parser.ArrayExpContext ctx){
+      // Get the array name
+      Exp name = (Exp)visit(ctx.expr(0));
+      // Create list to hold all indices
+      ExpList indices = new ExpList(0);
+      // Loop through all index expressions
+      for(int i = 1; i < ctx.expr().size(); i++){
+         indices.list.add((Exp)visit(ctx.expr(i)));
+      }
+      // Create and return ArrayExp node
+      return new ArrayExp(0, name, indices);
+   }
+   @Override
+   public Absyn visitAssignExp(g.Parser.AssignExpContext ctx){
+      // Get the left-hand side
+      Exp left = (Exp)visit(ctx.expr());
+      // Get the right-hand side
+      Exp right = (Exp)visit(ctx.initalizer());
+      // Create and return AssignExp node
+      return new AssignExp(0, left, right);
+   }
+   @Override
+   public Absyn visitDecLit(gParser.DecLitContext ctx){
+      // Get the token text and parse it as an integer
+      int value = Integer.parseInt(ctx.DECIMAL_LITERAL().getText());
+      // Create and return DecLit node
+      return new DecLit(0, value);
+   }
+   @Override
+   public Absyn visitID(g.Parser.IDContext ctx){
+      // Get the identifier text
+      String name = ctx.ID().getText();
+      // Create and return ID node
+      return new ID(0, name);
+   }
+   @Override
+   public Absyn visitStrLit(gParser.StrLitContext ctx){
+      // Get the string literal text
+      String value = ctx.STRING_LITERAL().getText();
+      // Create and return StrLit node
+      return new StrLit(0, value);
+   }
+
 
 }
 
