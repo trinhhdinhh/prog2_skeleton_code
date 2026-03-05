@@ -36,16 +36,63 @@ public class ASTBuilder extends gParserBaseVisitor<Absyn> {
       }
       return decls;
    }
+   
+// ===== Part 3: Statements (Control Flow Layer) =====
 
-   @Override
-   public Absyn visit__(gParser.__Context ctx) {
-      return new IfStmt(
-            0,
-            visit(ctx.expr()),
-            visit(ctx.statement()),
-            new EmptyStmt(0)
-      );
-   }
+@Override
+public Absyn visitCompStmt(gParser.CompStmtContext ctx) {
+    DeclList decls = new DeclList(0);
+    for (gParser.DeclarationContext dctx : ctx.declaration()) {
+        decls.list.add((Decl) visit(dctx));
+    }
+
+    StmtList stmts = new StmtList(0);
+    for (gParser.StatementContext sctx : ctx.statement()) {
+        stmts.list.add((Stmt) visit(sctx));
+    }
+
+    return new CompStmt(0, decls, stmts);
+}
+
+@Override
+public Absyn visitIfStmt(gParser.IfStmtContext ctx) {
+    Exp condition = (Exp) visit(ctx.expr());
+    Stmt thenStmt = (Stmt) visit(ctx.statement());
+    return new IfStmt(0, condition, thenStmt, new EmptyStmt(0));
+}
+
+@Override
+public Absyn visitIfElseStmt(gParser.IfElseStmtContext ctx) {
+    Exp condition = (Exp) visit(ctx.expr());
+    Stmt thenStmt = (Stmt) visit(ctx.statement(0));
+    Stmt elseStmt = (Stmt) visit(ctx.statement(1));
+    return new IfStmt(0, condition, thenStmt, elseStmt);
+}
+
+@Override
+public Absyn visitWhileStmt(gParser.WhileStmtContext ctx) {
+    Exp condition = (Exp) visit(ctx.expr());
+    Stmt body = (Stmt) visit(ctx.statement());
+    return new WhileStmt(0, condition, body);
+}
+
+@Override
+public Absyn visitExprStmt(gParser.ExprStmtContext ctx) {
+    Exp expression = (Exp) visit(ctx.expr());
+    return new ExprStmt(0, expression);
+}
+
+@Override
+public Absyn visitReturnStmt(gParser.ReturnStmtContext ctx) {
+    Exp returnValue = (Exp) visit(ctx.initializer());
+    return new ReturnStmt(0, returnValue);
+}
+
+@Override
+public Absyn visitBreakStmt(gParser.BreakStmtContext ctx) {
+    return new BreakStmt(0);
+    }
+
    @Override
    public Absyn visitParenExp(gParser.ParenExpContext ctx){
       // Just visit the inner expression and return it
