@@ -38,6 +38,66 @@ public class ASTBuilder extends gParserBaseVisitor<Absyn> {
    }
 
    
+    // ===== Part 1: Type System & Basic Literals =====
+
+    // type                    : CONST? type_name STAR* brackets_list?
+    @Override
+    public Absyn visitType(gParser.TypeContext ctx) {
+        boolean isConst = (ctx.CONST() != null); //CONST? - bool
+        String typeName = ctx.type_name().getText(); //type_name - string
+        int pointerCount = (ctx.STAR() != null) ? ctx.STAR().size() : 0; //
+        DeclList brackets = new DeclList(0);
+        if (ctx.brackets_list() != null) {
+            brackets = (DeclList) visit(ctx.brackets_list());
+        }
+        return new Type(0, ctx.CONST() != null, ctx.type_name().getText(), pointerCount, brackets);
+    }
+
+    /**
+     *  brackets_list           :  (LSQUARE RSQUARE)+ #EmptyArrayBrackets
+     *                          |  (LSQUARE expr RSQUARE)+ #ExprArrayBrackets
+     *                          ;
+     */
+
+    // #EmptyArrayBrackets - add new element to a brackets list for
+    @Override
+    public Absyn visitEmptyArrayBrackets(gParser.EmptyArrayBracketsContext ctx) {
+        DeclList brackets = new DeclList(0);
+        int count = ctx.LSQUARE().size();
+        for (int i = 0; i < count; i++) {
+            brackets.list.add(new ArrayType(0, new EmptyExp(0)));
+        }
+        return brackets;
+    }
+   
+    //                         |  (LSQUARE expr RSQUARE)+ #ExprArrayBrackets
+    @Override
+    public Absyn visitExprArrayBrackets(gParser.ExprArrayBracketsContext ctx) {
+        DeclList brackets = new DeclList(0);
+        for (gParser.ExprContext ectx : ctx.expr()) {
+            brackets.list.add(new ArrayType(0, (Exp) visit(ectx)));
+        }
+        return brackets;
+    }
+
+    /**
+     * initializer             : expr
+     *                         | LCURLY initializer (COMMA initializer)* RCURLY
+     *                         ;
+     */
+
+    @Override
+    public Absyn visitInitializer(gParser.InitializerContext ctx) {
+        if (ctx.expr() != null) {
+            return visit(ctx.expr());
+        }
+        ExpList list = new ExpList(0);
+        for (gParser.InitializerContext ictx : ctx.initializer()) {
+            list.list.add((Exp) visit(ictx));
+        }
+        return list;
+    }
+   
 // ===== Part 2: Decls ===============================
 
    @Override
