@@ -36,6 +36,70 @@ public class ASTBuilder extends gParserBaseVisitor<Absyn> {
       }
       return decls;
    }
+
+   
+// ===== Part 2: Decls ===============================
+
+   @Override
+    public Absyn visitVarDecl(gParser.VarDeclContext ctx) {
+        Type type = (Type) visit(ctx.type());
+        String name = ctx.ID().getText();
+        Exp init;
+        if (ctx.initialization().getChildCount() == 0) {
+            init = new ExpList(0);
+        } else {
+            init = (Exp) visit(ctx.initialization().initializer());
+        }
+        return new VarDecl(0, type, name, init);
+    }
+
+    @Override
+    public Absyn visitFunDecl(gParser.FunDeclContext ctx) {
+        Type type = (Type) visit(ctx.type());
+        String name = ctx.ID().getText();
+
+        DeclList params = new DeclList(0);
+
+        if (ctx.parameters() != null) {
+            for (int i = 0; i < ctx.parameters().type().size(); i++) {
+                Type paramType = (Type) visit(ctx.parameters().type(i));
+                String paramName = ctx.parameters().ID(i).getText();
+                params.list.add(new Parameter(0, paramType, paramName));
+            }
+        }
+
+        Stmt body = (Stmt) visit(ctx.statement());
+
+        return new FunDecl(0, type, name, params, body);
+    }
+
+    @Override
+    public Absyn visitTypedefDecl(gParser.TypedefDeclContext ctx) {
+        Type type = (Type) visit(ctx.type());
+        String name = ctx.ID().getText();
+        return new Typedef(0, type, name);
+    }
+
+    @Override
+    public Absyn visitStructOrUnionDecl(gParser.StructOrUnionDeclContext ctx) {
+        String name = ctx.ID(0).getText();
+
+        DeclList members = new DeclList(0);
+        for (int i = 0; i < ctx.type().size(); i++) {
+            Type memberType = (Type) visit(ctx.type(i));
+            String memberName = ctx.ID(i + 1).getText();
+            if (ctx.STRUCT() != null) {
+                members.list.add(new StructMember(0, memberType, memberName));
+            } else {
+                members.list.add(new UnionMember(0, memberType, memberName));
+            }
+        }
+        if (ctx.STRUCT() != null) {
+            return new StructDecl(0, name, members);
+        } else {
+            return new UnionDecl(0, name, members);
+        }
+    }
    
 // ===== Part 3: Statements (Control Flow Layer) =====
 
