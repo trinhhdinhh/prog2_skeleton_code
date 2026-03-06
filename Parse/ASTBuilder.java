@@ -153,13 +153,19 @@ public Absyn visitBreakStmt(gParser.BreakStmtContext ctx) {
       // Create and return AssignExp node
       return new AssignExp(0, left, right);
    }
-   @Override
-   public Absyn visitDecLit(gParser.DecLitContext ctx){
-      // Get the token text and parse it as an integer
-      int value = Integer.parseInt(ctx.DECIMAL_LITERAL().getText());
-      // Create and return DecLit node
-      return new DecLit(0, value);
-   }
+   @Override //DecLit accounts for hex, oct. and decimal now
+    public Absyn visitDecLit(gParser.DecLitContext ctx) {
+        String text = ctx.DECIMAL_LITERAL().getText();
+        int value;
+        if (text.startsWith("0X") || text.startsWith("0x")) {
+            value = Integer.parseInt(text.substring(2), 16);
+        } else if (text.startsWith("0") && text.length() > 1) {
+            value = Integer.parseInt(text.substring(1), 8);
+        } else {
+            value = Integer.parseInt(text);
+        }
+        return new DecLit(0, value);
+    }
    @Override
    public Absyn visitID(gParser.IDContext ctx){
       // Get the identifier text
